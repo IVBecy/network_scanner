@@ -18,11 +18,14 @@ def usage():
           The IP of the 'victim'
 
       OPTIONAL (One of these are needed):
-        -p or --portscan:
+        -p or --portscan [port limit]:
           Just a simple scan up until the given port number.
         ###################################
         -w or --wp:
           Scan through all of the well known ports.
+         ###################################
+        -s or --specificport [port]:
+          Scans a specific port.
 
       HELP:
        -h or --help: 
