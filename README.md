@@ -29,7 +29,7 @@ A network scanner, inspired by Nmap.
  - socket
  - optparse
  
- # Types of Scans
- - Simple port scan: Scans an given amount of port, can be set with ```-p [num] ```
- - Well know port scan: Scan through all the well know ports, can be set with ```-w ```
+ # Type of Scans
+ - Simple port scan: Scans a given amount of port, can be set with ```-p [num] ```
+ - Well know port scan: Scans through all the well know ports, can be set with ```-w ```
  
