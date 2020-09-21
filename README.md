@@ -31,4 +31,5 @@ A network scanner, inspired by Nmap.
  # Type of Scans
  - Simple port scan: Scans a given amount of port, can be set with ```-p [num] ```
  - Well know port scan: Scans through all the well know ports, can be set with ```-w ```
+ - Specific port scan. This option will only scan 1 (the specified) port. It can be set with: ``` -s [port]```
  
