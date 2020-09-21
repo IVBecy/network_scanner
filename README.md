@@ -26,8 +26,7 @@ A network scanner, inspired by Nmap.
  ```
  
  # Packages (to be installed)
- - socket
- - optparse
+ - ``` pip install -r requirements.txt ```
  
  # Type of Scans
  - Simple port scan: Scans a given amount of port, can be set with ```-p [num] ```
