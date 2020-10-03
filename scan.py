@@ -6,8 +6,7 @@ import sys
 from optparse import OptionParser
 
 # Usage menu
-def usage():
-  print(""" 
+usage_text = """ 
 
     Usage: scan.py [kwargs]
     
@@ -32,7 +31,9 @@ def usage():
       HELP:
        -h or --help: 
       
-      """)
+      """
+def usage():
+  print(usage_text)
   sys.exit()
 #Setting up the options for the terminal
 parser = OptionParser()
@@ -46,13 +47,14 @@ parser.add_option("-p", "--portscan", dest="port_scan")
 parser.add_option("-w", "--wp", dest="known_ports", action="store_true")
 parser.add_option("-s", "--specificport", dest="specific_port")
 (options, args) = parser.parse_args()
-#Checking for needed arguments
-if options.help:
-  usage()
-if options.IP is None:
-  usage()
-if (options.port_scan is None) and (options.known_ports is None) and (options.specific_port is None):
-  usage()
+if __name__ == "__main__":
+  #Checking for needed arguments
+  if options.help:
+    usage()
+  if options.IP is None:
+    usage()
+  if (options.port_scan is None) and (options.known_ports is None) and (options.specific_port is None):
+    usage()
 # Main class
 class Scanner():
   # On every start up
@@ -97,11 +99,6 @@ class Scanner():
               for i in self.openPorts:
                 print(f"{i}  open")
                 self.done = True
-              print("\n")
-              print("Info on the ports:\n")
-              for loop in self.targetInfo:
-                print(f"PORT: {loop} ")
-                print(self.targetInfo[loop])
         print("\n")
         print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
       #Well known port scanner
@@ -119,14 +116,8 @@ class Scanner():
             for i in self.openPorts:
               print(f"{i}  open")
               self.done = True
-            print("\n")
-            print("Info on the ports:\n")
-            for loop in self.targetInfo:
-              print(f"PORT: {loop} ")
-              print(self.targetInfo[loop])
         print("\n")
         print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
-
       # Specific port scan
       elif (i == "specific_port") and (self.options["specific_port"] is not None):
         print(f"Scanning, port {self.options[i]}")
@@ -141,31 +132,16 @@ class Scanner():
         if len(self.openPorts) == 0:
           print(f"{self.options[i]} closed")
         print("\n")
-        print("\n")
-        print("Info on the ports:\n")
-        for loop in self.targetInfo:
-          print(f"PORT: {loop} ")
-          print(self.targetInfo[loop])
         print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
   ########################################## METHODS ###################################################
   # Simple port scan method 
   def portScan(self, port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.result = self.sock.connect_ex((self.IP, port))
-    try:
-      self.info = self.sock.send(('HEAD / HTTP/1.1\nHost: ' + self.IP + '\n\n').encode())
-    except OSError:
-      pass 
-    except UnicodeDecodeError:
-        pass
     if self.result == 0:
       if port in self.openPorts:
         pass
       else:
-        try:
-          self.targetInfo[port] = self.sock.recv(1024).decode()
-        except OSError:
-          pass
         self.openPorts.append(port)
     else:
       pass
@@ -174,17 +150,7 @@ class Scanner():
   def wellKnownPortScan(self, port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.result = self.sock.connect_ex((self.IP, port))
-    try:
-      self.info = self.sock.send(('HEAD / HTTP/1.1\nHost: ' + self.IP + '\n\n').encode())
-    except OSError:
-      pass 
     if self.result == 0:
-      try:
-        self.targetInfo[port] = self.sock.recv(1024).decode()
-      except OSError:
-        pass
-      except UnicodeDecodeError:
-        pass
       self.openPorts.append(port)
     else:
       pass
@@ -193,17 +159,7 @@ class Scanner():
   def SpecificPortScan(self, port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.result = self.sock.connect_ex((self.IP, port))
-    try:
-      self.info = self.sock.send(('HEAD / HTTP/1.1\nHost: ' + self.IP + '\n\n').encode())
-    except OSError:
-      pass 
-    if self.result == 0:
-      try:
-        self.targetInfo[port] = self.sock.recv(1024).decode()
-      except OSError:
-        pass
-      except UnicodeDecodeError:
-        pass
+    if self.result == 0:  
       self.openPorts.append(port)
 
 # Calling the class
