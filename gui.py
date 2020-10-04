@@ -2,64 +2,110 @@
 import time
 import sys
 import scan
+import threading
 from tkinter import *
 
 # Main class
 class Gui():
   # On every start up
   def __init__(self):
-    ############################# GUI  ###########################################
+    ############################# VARIABLES ###########################################
     self.GREY = "#C0C0C0"
     self.labelFont = 13
+    self.frameHeight = 38
+    self.scanOpts = ["known_ports","specific_port","port_scan"]
+    ############################# GUI  ###########################################
     #root
-    self.height = 600
-    self.width = 600
+    self.height = 800
+    self.width = 800
     self.root = Tk()
     self.root.title("Network Scanner")
     self.root.geometry(f"{self.width}x{self.height}")
-    self.root.minsize(600, 600)
-    self.root.maxsize(700, 700)
+    self.root.resizable(False, False)
+    self.root.grid_rowconfigure(0, weight=1)
+    self.root.grid_columnconfigure(0, weight=1)
     #info
     self.inst = Frame(self.root, bg=self.GREY,relief="flat",width=self.width,height=200)
-    self.inst.grid(ipadx=5000)
+    self.inst.grid(ipady=20,ipadx=100,sticky=NW)
     #target
     self.targetLabel = Label(self.inst,text="Target:",bg=self.GREY,font=("Arial",self.labelFont))
     self.targetLabel.grid(column=0,row=1,ipadx=20,ipady=20)
-    self.targetEntry = Entry(self.inst,bg="white", font=("Arial", 11),borderwidth=2,relief="ridge")
+    self.targetEntry = Entry(self.inst,bg="white", font=("Arial", 11),borderwidth=1,relief="solid")
     self.targetEntry.grid(column=1,row=1)
     #mode
+    self.variable = StringVar(self.root)
+    self.variable.set(self.scanOpts[0])
     self.modeLabel = Label(self.inst, text="Mode:",bg=self.GREY,font=("Arial",self.labelFont))
     self.modeLabel.grid(column=2,row=1,ipadx=20)
-    self.modeEntry = Entry(self.inst,bg="white",font=("Arial", 11),borderwidth=2,relief="ridge")
+    self.modeEntry = OptionMenu(self.inst, self.variable, *self.scanOpts)
     self.modeEntry.grid(column=3,row=1)
+    #port 
+    self.portLabel = Label(self.inst, text="Port:",bg=self.GREY, font=("Arial", self.labelFont))
+    self.portLabel.grid(column=4, row=1, ipadx=20)
+    self.portEntry = Entry(self.inst, bg="white", font=("Arial", 11), borderwidth=1, relief="solid",width=10)
+    self.portEntry.grid(column=5, row=1)
     #scan
-    self.scanButton = Button(self.inst,text="Scan",bg=self.GREY,font=("Arial",self.labelFont),command=self.scanning)
-    self.scanButton.grid(column=4,row=1,padx=20)
+    self.scanButton = Button(self.inst,text="Scan",bg=self.GREY,font=("Arial",self.labelFont-1),command=self.scanning)
+    self.scanButton.grid(column=6,row=1,padx=40)
     #output
-    self.textvar = StringVar()
-    self.textvar.set("djbfhjsbfjhbsfhub")
-    self.outputArea = Label(self.root,textvariable=self.textvar,bg="black",fg="black",relief="flat",font=("Arial",self.labelFont))
-    self.outputArea.grid(column=1,row=2)    
-    ##### Variables for scanning
-    self.guiTarget = self.targetEntry.get()
-    self.guiMethod = self.modeEntry.get()
-    ## usage and option check
-    options = scan.options
-    print(options)
-    if __name__ == "__main__":
-      #Checking for needed arguments  
-      if options.help:
-        self.textvar.set(scan.usage_text)
-      if options.IP is None:
-         self.outputArea.config(text=scan.usage_text)
-      if (options.port_scan is None) and (options.known_ports is None) and (options.specific_port is None):
-         self.outputArea.config(text=scan.usage_text)
+    self.outputFrame = Frame(self.root,width=self.width,height=self.frameHeight, bg="black")
+    self.outputFrame.grid()
+    self.scrollbar = Scrollbar(self.outputFrame ,orient="vertical")
+    self.scrollbar.grid(sticky=NS, row=0, column=0)
+    self.outputArea = Listbox(self.outputFrame, yscrollcommand=self.scrollbar.set, width=self.width,height=self.frameHeight, bg="black", fg="white", bd=0, highlightthickness=0, font=("Verdana", self.labelFont-1))
+    self.outputArea.grid(column=0, row=0, sticky=NSEW)
+    self.scrollbar.config(command=self.outputArea.yview)
     ### end
     self.root.mainloop() 
 
+  #scanning from the gui
   def scanning(self):
-    Scannner = scan.Scanner()
-    
+    #calling methods
+    scanner = scan.Scanner()
+    # check args
+    if self.targetEntry.get() == "":
+      self.outputArea.insert(END, "No host was given.")
+      self.outputArea.insert(END, "Please specify it.")
+      self.outputArea.insert(END, "\n")
+      return None
+    #rewriting scanner options based on GUI input
+    for opt in scanner.options:
+      if opt == self.variable.get():
+        if opt == "known_ports":
+          scanner.options[opt] = scanner.options[opt] = True
+        else:
+          # check args
+          if self.portEntry.get() == "":
+            self.outputArea.insert(END, "No port / port range was given.")
+            self.outputArea.insert(END, "Please specify it.")
+            self.outputArea.insert(END, "\n")
+            return None
+          scanner.options[opt] = scanner.options[self.variable.get()] = self.portEntry.get()
+      else:
+        scanner.options[opt] = scanner.options[opt] = None
+    scanner.options["IP"] = scanner.options["IP"] = self.targetEntry.get()
+    scanner.LoopAndThread(self.targetEntry.get())
+    # outputing to the screen
+    self.outputArea.insert(END, "\n")
+    self.outputArea.insert(END, f"Start time of scan: {time.ctime()}")
+    self.outputArea.insert(END, f"Host: {self.targetEntry.get()}")
+    self.outputArea.insert(END, "\n")
+    self.outputArea.insert(END, f"PORT  STATE")
+    #removing unneeded items in the array
+    for ar in scanner.openPorts:
+      if scanner.openPorts.count(ar) > 1:
+        while scanner.openPorts.count(ar) != 1:
+          scanner.openPorts.remove(ar)
+    # outputing to the screen
+    if scanner.options["specific_port"] != None:
+      if len(scanner.openPorts) == 0:
+          self.outputArea.insert(END, f"{self.portEntry.get()}      closed")
+    for i in scanner.openPorts:
+      self.outputArea.insert(END, f"{i}      open")
+    self.outputArea.insert(END, "\n")
+    self.outputArea.insert(END, f"Scan is done: {self.targetEntry.get()} scanned in  {(time.time() - scanner.startTime):.3} seconds")
+    self.outputArea.insert(END, "________________________________________________________________________")
+    self.outputArea.insert(END, "\n")
 
 # Calling the class
 if __name__ == "__main__":

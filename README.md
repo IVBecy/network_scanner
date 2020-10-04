@@ -2,27 +2,38 @@
 A network scanner, inspired by Nmap.
 
 # Preview
+  ## Terminal
  ![preview](prev.png)
+  ## GUI
+ ![preview](gui.png)
  
  # Usage
  ```
  Usage: scan.py [kwargs]
     
     ARGUMENTS (kwargs):
+
       REQUIRED:
+        ------------------------------------------------
         --ip: 
           The IP of the 'victim'
-      OPTIONAL (One of these are needed):
+        ------------------------------------------------
+
+      OPTIONAL (One of these is needed):
+        ------------------------------------------------
         -p or --portscan [port limit]:
           Just a simple scan up until the given port number.
-        ###################################
+        ------------------------------------------------
         -w or --wp:
           Scan through all of the well known ports.
-         ###################################
+          If used in GUI, leave the port input blank.
+        ------------------------------------------------
         -s or --specificport [port]:
           Scans a specific port.
+        ------------------------------------------------
+
       HELP:
-       -h or --help: 
+       -h or --help:  
  ```
  
  # Packages (to be installed)

@@ -13,8 +13,10 @@ usage_text = """
     ARGUMENTS (kwargs):
 
       REQUIRED:
+        ------------------------------------------------
         --ip: 
-          The IP of the 'victim'
+          The IP of the 'victim'.
+        ------------------------------------------------
 
       OPTIONAL (One of these is needed):
         ------------------------------------------------
@@ -23,6 +25,7 @@ usage_text = """
         ------------------------------------------------
         -w or --wp:
           Scan through all of the well known ports.
+          If used in GUI, leave the port input blank.
         ------------------------------------------------
         -s or --specificport [port]:
           Scans a specific port.
@@ -69,8 +72,12 @@ class Scanner():
     self.done = False
     self.targetInfo = {}
     self.methods = ["port_scan", "known_ports", "specific_port"]
-    self.wellKnownports = [20, 21, 22, 23, 25, 53, 67, 68, 80, 88, 101, 110, 111, 115, 119, 135, 139, 143, 443, 445, 464, 531, 749, 873, 992, 993, 995, 1723, 3306, 3389, 5900, 8080]
-    ################################# Checking number of arguments ########################################
+    self.wellKnownports = [20, 21, 22, 23, 25, 53, 67, 68, 80, 88, 101, 110, 111, 115, 119, 135, 139, 143, 443, 445, 464, 531, 749, 873, 992, 993, 995, 1723, 3306, 3389, 5900, 8080, 9050, 9051, 9010]
+    
+  ########################################## METHODS ###################################################
+  # method for looping over each option, and execute the one that is being called
+  def LoopAndThread(self, ip):
+    ################################ Checking number of arguments ########################################
     for i in self.options:
       if (i in self.methods) and (self.options[i] is not None):
         self.trues.append(i)
@@ -80,7 +87,7 @@ class Scanner():
     ######################## Looping through the options and executing them #################################
     print(f"\nStart time of scan: {time.ctime()}")
     self.startTime = time.time()
-    print(f"Host: {self.IP}")
+    print(f"Host: {ip}")
     for i in self.options:     
       # Port scanning (thread)
       if (i == "port_scan") and (self.options["port_scan"] is not None):
@@ -89,7 +96,7 @@ class Scanner():
         print("PORT STATE")
         for index in range(self.iterator):
           for port in range(int(self.options[i])):
-            thread = threading.Thread(target=self.portScan, args=(port,))
+            thread = threading.Thread(target=self.portScan, args=(ip,port,))
             thread.daemon = True
             thread.start()
             time.sleep(0.01)
@@ -100,7 +107,7 @@ class Scanner():
                 print(f"{i}  open")
                 self.done = True
         print("\n")
-        print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
+        print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
       #Well known port scanner
       elif (i == "known_ports") and (self.options["known_ports"] is True):
         print("Scanning all the known ports")
@@ -108,7 +115,7 @@ class Scanner():
         print("PORT STATE")
         for index in range (self.iterator):
           for port in self.wellKnownports:
-            thread = threading.Thread(target=self.wellKnownPortScan, args=(port,))
+            thread = threading.Thread(target=self.wellKnownPortScan, args=(ip, port,))
             thread.daemon = True
             thread.start()
             time.sleep(0.01)
@@ -117,27 +124,33 @@ class Scanner():
               print(f"{i}  open")
               self.done = True
         print("\n")
-        print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
+        print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
       # Specific port scan
       elif (i == "specific_port") and (self.options["specific_port"] is not None):
         print(f"Scanning, port {self.options[i]}")
         print("\n")
         print("PORT STATE")
-        thread = threading.Thread(target=self.SpecificPortScan, args=(int(self.options[i]),)) 
-        thread.daemon = True
-        thread.start()
-        time.sleep(0.1)
+        for index in range(self.iterator):
+          thread = threading.Thread(target=self.SpecificPortScan, args=(ip,int(self.options[i]),)) 
+          thread.daemon = True
+          thread.start()
+          time.sleep(0.1)
+        #removing unneeded items in the array
+        for ar in self.openPorts:
+          if self.openPorts.count(ar) > 1:
+            while self.openPorts.count(ar) != 1:
+              self.openPorts.remove(ar)
         for i in self.openPorts:
           print(f"{i}  open")
         if len(self.openPorts) == 0:
           print(f"{self.options[i]} closed")
         print("\n")
-        print(f"Scan is done: {self.IP} scanned in  {(time.time() - self.startTime):.3} seconds")
-  ########################################## METHODS ###################################################
+        print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
+  
   # Simple port scan method 
-  def portScan(self, port):
+  def portScan(self, ip ,port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.result = self.sock.connect_ex((self.IP, port))
+    self.result = self.sock.connect_ex((ip, port))
     if self.result == 0:
       if port in self.openPorts:
         pass
@@ -147,21 +160,22 @@ class Scanner():
       pass
 
   # Well known port scan
-  def wellKnownPortScan(self, port):
+  def wellKnownPortScan(self, ip, port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.result = self.sock.connect_ex((self.IP, port))
+    self.result = self.sock.connect_ex((ip, port))
     if self.result == 0:
       self.openPorts.append(port)
     else:
       pass
   
   #Specific Port scan
-  def SpecificPortScan(self, port):
+  def SpecificPortScan(self, ip, port):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.result = self.sock.connect_ex((self.IP, port))
+    self.result = self.sock.connect_ex((ip, port))
     if self.result == 0:  
       self.openPorts.append(port)
 
 # Calling the class
 if __name__ ==  "__main__":
   Scanning = Scanner()
+  Scanning.LoopAndThread(Scanning.IP)
