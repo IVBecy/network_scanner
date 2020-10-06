@@ -24,6 +24,12 @@ class Gui():
     self.root.resizable(False, False)
     self.root.grid_rowconfigure(0, weight=1)
     self.root.grid_columnconfigure(0, weight=1)
+    #menu
+    self.menu = Menu(self.root)
+    self.root.config(menu=self.menu)
+    self.fileMenu = Menu(self.menu, tearoff=0)
+    self.fileMenu.add_command(label="Save scan report", command=self.saveFile)
+    self.menu.add_cascade(label="Save file", menu=self.fileMenu)
     #info
     self.inst = Frame(self.root, bg=self.GREY,relief="flat",width=self.width,height=200)
     self.inst.grid(ipady=20,ipadx=100,sticky=NW)
@@ -58,6 +64,14 @@ class Gui():
     ### end
     self.root.mainloop() 
 
+  #file saving method
+  def saveFile(self):
+    string =  ''.join(self.outputArea.get(0,END))
+    f = open("scan_report.txt", 'a')
+    for i in string:
+      f.write(i)
+    f.close()
+
   #scanning from the gui
   def scanning(self):
     #calling methods
@@ -87,10 +101,10 @@ class Gui():
     scanner.LoopAndThread(self.targetEntry.get())
     # outputing to the screen
     self.outputArea.insert(END, "\n")
-    self.outputArea.insert(END, f"Start time of scan: {time.ctime()}")
-    self.outputArea.insert(END, f"Host: {self.targetEntry.get()}")
+    self.outputArea.insert(END, f"Start time of scan: {time.ctime()}\n")
+    self.outputArea.insert(END, f"Host: {self.targetEntry.get()}\n")
     self.outputArea.insert(END, "\n")
-    self.outputArea.insert(END, f"PORT  STATE")
+    self.outputArea.insert(END, f"PORT  STATE\n")
     #removing unneeded items in the array
     for ar in scanner.openPorts:
       if scanner.openPorts.count(ar) > 1:
@@ -99,11 +113,11 @@ class Gui():
     # outputing to the screen
     if scanner.options["specific_port"] != None:
       if len(scanner.openPorts) == 0:
-          self.outputArea.insert(END, f"{self.portEntry.get()}      closed")
+          self.outputArea.insert(END, f"{self.portEntry.get()}      closed\n")
     for i in scanner.openPorts:
-      self.outputArea.insert(END, f"{i}      open")
+      self.outputArea.insert(END, f"{i}      open\n")
     self.outputArea.insert(END, "\n")
-    self.outputArea.insert(END, f"Scan is done: {self.targetEntry.get()} scanned in  {(time.time() - scanner.startTime):.3} seconds")
+    self.outputArea.insert(END, f"Scan is done: {self.targetEntry.get()} scanned in  {(time.time() - scanner.startTime):.3} seconds\n")
     self.outputArea.insert(END, "________________________________________________________________________")
     self.outputArea.insert(END, "\n")
 

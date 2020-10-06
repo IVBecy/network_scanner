@@ -30,6 +30,9 @@ usage_text = """
         -s or --specificport [port]:
           Scans a specific port.
         ------------------------------------------------
+        -f or --file [filename]:
+          Write scan reports to a file.
+        ------------------------------------------------
 
       HELP:
        -h or --help: 
@@ -49,6 +52,7 @@ parser.add_option("--ip", dest="IP")
 parser.add_option("-p", "--portscan", dest="port_scan")
 parser.add_option("-w", "--wp", dest="known_ports", action="store_true")
 parser.add_option("-s", "--specificport", dest="specific_port")
+parser.add_option("-f","--file", dest="fileName")
 (options, args) = parser.parse_args()
 if __name__ == "__main__":
   #Checking for needed arguments
@@ -73,7 +77,8 @@ class Scanner():
     self.targetInfo = {}
     self.methods = ["port_scan", "known_ports", "specific_port"]
     self.wellKnownports = [20, 21, 22, 23, 25, 53, 67, 68, 80, 88, 101, 110, 111, 115, 119, 135, 139, 143, 443, 445, 464, 531, 749, 873, 992, 993, 995, 1723, 3306, 3389, 5900, 8080, 9050, 9051, 9010]
-    
+    self.outputText = ""
+
   ########################################## METHODS ###################################################
   # method for looping over each option, and execute the one that is being called
   def LoopAndThread(self, ip):
@@ -85,15 +90,12 @@ class Scanner():
         print("Illegal amount of arguments")
         usage()  
     ######################## Looping through the options and executing them #################################
-    print(f"\nStart time of scan: {time.ctime()}")
+    print(f"Start time of scan: {time.ctime()}\nHost: {ip}\n\nPORT STATE\n")
     self.startTime = time.time()
-    print(f"Host: {ip}")
+    self.outputText += f"\nStart time of scan: {time.ctime()}\nHost: {ip}\n\nPORT STATE\n"
     for i in self.options:     
       # Port scanning (thread)
       if (i == "port_scan") and (self.options["port_scan"] is not None):
-        print("Port scan started")
-        print("\n")
-        print("PORT STATE")
         for index in range(self.iterator):
           for port in range(int(self.options[i])):
             thread = threading.Thread(target=self.portScan, args=(ip,port,))
@@ -105,14 +107,13 @@ class Scanner():
             if self.done == False:
               for i in self.openPorts:
                 print(f"{i}  open")
+                self.outputText += f"{i}  open\n"
                 self.done = True
         print("\n")
         print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
+        self.outputText += f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds"
       #Well known port scanner
       elif (i == "known_ports") and (self.options["known_ports"] is True):
-        print("Scanning all the known ports")
-        print("\n")
-        print("PORT STATE")
         for index in range (self.iterator):
           for port in self.wellKnownports:
             thread = threading.Thread(target=self.wellKnownPortScan, args=(ip, port,))
@@ -122,14 +123,13 @@ class Scanner():
           if self.done == False:
             for i in self.openPorts:
               print(f"{i}  open")
+              self.outputText += f"{i}  open\n"
               self.done = True
         print("\n")
         print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
+        self.outputText += f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds"
       # Specific port scan
       elif (i == "specific_port") and (self.options["specific_port"] is not None):
-        print(f"Scanning, port {self.options[i]}")
-        print("\n")
-        print("PORT STATE")
         for index in range(self.iterator):
           thread = threading.Thread(target=self.SpecificPortScan, args=(ip,int(self.options[i]),)) 
           thread.daemon = True
@@ -142,10 +142,18 @@ class Scanner():
               self.openPorts.remove(ar)
         for i in self.openPorts:
           print(f"{i}  open")
+          self.outputText += f"{i}  open\n"
         if len(self.openPorts) == 0:
           print(f"{self.options[i]} closed")
+          self.outputText += f"{self.options[i]} closed"
         print("\n")
         print(f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds")
+        self.outputText += f"Scan is done: {ip} scanned in  {(time.time() - self.startTime):.3} seconds"
+
+    #Writing to file if needed
+    if options.fileName:
+      f = open(str(options.fileName), "a")
+      f.write(self.outputText)
   
   # Simple port scan method 
   def portScan(self, ip ,port):
