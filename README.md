@@ -1,46 +1,22 @@
 # Network Scanner
 A network scanner, inspired by Nmap.
 
+# Scans and usage:
+
+| Name                | Command                     | Explanation                      |
+|---------------------|-----------------------------|----------------------------------|
+| Simple port scan    | -p or --portscan [limit]    | Scans up until the limit         |
+| Well know port scan | -w or --wp                  | Scans a pre-defined set of ports |
+| Specific port scan  | -s or --specificport [port] | Scans one specific port          |
+
+
+# Packages (to be installed):
+ - ``` pip install -r requirements.txt ```
+
 # Preview
   ## Terminal
- ![preview](prev.png)
+ ![preview](screenshots/prev.png)
   ## GUI
- ![preview](gui.png)
+ ![preview](screenshots/gui.png)
  
- # Usage
- ```
- Usage: scan.py [kwargs]
-    
-    ARGUMENTS (kwargs):
-
-      REQUIRED:
-        ------------------------------------------------
-        --ip: 
-          The IP of the 'victim'
-        ------------------------------------------------
-
-      OPTIONAL (One of these is needed):
-        ------------------------------------------------
-        -p or --portscan [port limit]:
-          Just a simple scan up until the given port number.
-        ------------------------------------------------
-        -w or --wp:
-          Scan through all of the well known ports.
-          If used in GUI, leave the port input blank.
-        ------------------------------------------------
-        -s or --specificport [port]:
-          Scans a specific port.
-        ------------------------------------------------
-
-      HELP:
-       -h or --help:  
- ```
- 
- # Packages (to be installed)
- - ``` pip install -r requirements.txt ```
- 
- # Type of Scans
- - Simple port scan: Scans a given amount of port, can be set with ```-p [num] ```
- - Well know port scan: Scans through all the well know ports, can be set with ```-w ```
- - Specific port scan. This option will only scan 1 (the specified) port. It can be set with: ``` -s [port]```
  
