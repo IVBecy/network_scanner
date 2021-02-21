@@ -72,6 +72,13 @@ class Scanner():
     else:
       pass
 
+  # Making threads
+  def make_thread(self,target,**kwargs):
+    thread = threading.Thread(target=target, args=(kwargs["ip"], kwargs["port"],))
+    thread.daemon = True
+    thread.start()
+    time.sleep(0.01)
+
   # Method for executing functions
   def LoopAndThread(self, ip):
     # Check args
@@ -92,12 +99,8 @@ class Scanner():
       if (i == "port_scan") and (self.options["port_scan"] is not None):
         self.options[i] = int(self.options[i])
         self.options[i] += 1
-        #for index in range(self.iterator):
         for port in range(int(self.options[i])):
-          thread = threading.Thread(target=self.portScan, args=(ip,port,))
-          thread.daemon = True
-          thread.start()
-          time.sleep(0.01)
+          self.make_thread(self.portScan,ip=ip,port=port)
         self.openPorts = sorted(set(self.openPorts))
         for i in self.openPorts:
           self.outputText.append(f"{i}  open")
@@ -107,10 +110,7 @@ class Scanner():
       # Well known port scanner
       elif (i == "known_ports") and (self.options["known_ports"] is True):
         for port in self.wellKnownports:
-          thread = threading.Thread(target=self.wellKnownPortScan, args=(ip, port,))
-          thread.daemon = True
-          thread.start()
-          time.sleep(0.01)
+          self.make_thread(self.wellKnownPortScan, ip=ip, port=port)
         self.openPorts = sorted(set(self.openPorts))
         for i in self.openPorts:
           self.outputText.append(f"{i}  open")
@@ -119,10 +119,8 @@ class Scanner():
         self.update_screen()
       # Specific port scan
       elif (i == "specific_port") and (self.options["specific_port"] is not None):
-        thread = threading.Thread(target=self.SpecificPortScan, args=(ip,int(self.options[i]),)) 
-        thread.daemon = True
-        thread.start()
-        time.sleep(0.1)
+        for l in range(3):
+          self.make_thread(self.SpecificPortScan, ip=ip,port=int(self.options[i]),)
         self.openPorts = sorted(set(self.openPorts))
         for i in self.openPorts:
           self.outputText.append(f"{i}  open")
